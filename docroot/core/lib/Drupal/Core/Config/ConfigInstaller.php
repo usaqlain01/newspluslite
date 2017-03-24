@@ -511,7 +511,6 @@ class ConfigInstaller implements ConfigInstallerInterface {
    *   TRUE if the dependencies are met, FALSE if not.
    */
   protected function validateDependencies($config_name, array $data, array $enabled_extensions, array $all_config) {
-    list($provider) = explode('.', $config_name, 2);
     if (isset($data['dependencies'])) {
       $all_dependencies = $data['dependencies'];
 
@@ -522,6 +521,7 @@ class ConfigInstaller implements ConfigInstallerInterface {
       }
       // Ensure the configuration entity type provider is in the list of
       // dependencies.
+      list($provider) = explode('.', $config_name, 2);
       if (!isset($all_dependencies['module'])) {
         $all_dependencies['module'][] = $provider;
       }
@@ -547,10 +547,6 @@ class ConfigInstaller implements ConfigInstallerInterface {
           }
         }
       }
-    }
-    else {
-      // Simple config or a config entity without dependencies.
-      return in_array($provider, $enabled_extensions, TRUE);
     }
     return TRUE;
   }

@@ -8,7 +8,6 @@ use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\block_content\BlockContentInterface;
-use Drupal\user\UserInterface;
 
 /**
  * Defines the custom block entity class.
@@ -105,22 +104,16 @@ class BlockContent extends ContentEntityBase implements BlockContentInterface {
    */
   public function postSave(EntityStorageInterface $storage, $update = TRUE) {
     parent::postSave($storage, $update);
-    static::invalidateBlockPluginCache();
-  }
 
-  /**
-   * {@inheritdoc}
-   */
-  public static function postDelete(EntityStorageInterface $storage, array $entities) {
-    parent::postDelete($storage, $entities);
-    static::invalidateBlockPluginCache();
+    // Invalidate the block cache to update custom block-based derivatives.
+    \Drupal::service('plugin.manager.block')->clearCachedDefinitions();
   }
 
   /**
    * {@inheritdoc}
    */
   public function getInstances() {
-    return \Drupal::entityTypeManager()->getStorage('block')->loadByProperties(array('plugin' => 'block_content:' . $this->uuid()));
+    return entity_load_multiple_by_properties('block', array('plugin' => 'block_content:' . $this->uuid()));
   }
 
   /**
@@ -133,7 +126,7 @@ class BlockContent extends ContentEntityBase implements BlockContentInterface {
       // If we are updating an existing block_content without adding a new
       // revision and the user did not supply a revision log, keep the existing
       // one.
-      $record->revision_log = $this->original->getRevisionLogMessage();
+      $record->revision_log = $this->original->getRevisionLog();
     }
   }
 
@@ -151,20 +144,35 @@ class BlockContent extends ContentEntityBase implements BlockContentInterface {
    * {@inheritdoc}
    */
   public static function baseFieldDefinitions(EntityTypeInterface $entity_type) {
-    /** @var \Drupal\Core\Field\BaseFieldDefinition[] $fields */
-    $fields = parent::baseFieldDefinitions($entity_type);
+    $fields['id'] = BaseFieldDefinition::create('integer')
+      ->setLabel(t('Custom block ID'))
+      ->setDescription(t('The custom block ID.'))
+      ->setReadOnly(TRUE)
+      ->setSetting('unsigned', TRUE);
 
-    $fields['id']->setLabel(t('Custom block ID'))
-      ->setDescription(t('The custom block ID.'));
+    $fields['uuid'] = BaseFieldDefinition::create('uuid')
+      ->setLabel(t('UUID'))
+      ->setDescription(t('The custom block UUID.'))
+      ->setReadOnly(TRUE);
 
-    $fields['uuid']->setDescription(t('The custom block UUID.'));
+    $fields['revision_id'] = BaseFieldDefinition::create('integer')
+      ->setLabel(t('Revision ID'))
+      ->setDescription(t('The revision ID.'))
+      ->setReadOnly(TRUE)
+      ->setSetting('unsigned', TRUE);
 
-    $fields['revision_id']->setDescription(t('The revision ID.'));
-
-    $fields['langcode']->setDescription(t('The custom block language code.'));
-
-    $fields['type']->setLabel(t('Block type'))
-      ->setDescription(t('The block type.'));
+    $fields['langcode'] = BaseFieldDefinition::create('language')
+      ->setLabel(t('Language'))
+      ->setDescription(t('The custom block language code.'))
+      ->setTranslatable(TRUE)
+      ->setRevisionable(TRUE)
+      ->setDisplayOptions('view', array(
+        'type' => 'hidden',
+      ))
+      ->setDisplayOptions('form', array(
+        'type' => 'language_select',
+        'weight' => 2,
+      ));
 
     $fields['info'] = BaseFieldDefinition::create('string')
       ->setLabel(t('Block description'))
@@ -179,6 +187,12 @@ class BlockContent extends ContentEntityBase implements BlockContentInterface {
       ->setDisplayConfigurable('form', TRUE)
       ->addConstraint('UniqueField', []);
 
+
+    $fields['type'] = BaseFieldDefinition::create('entity_reference')
+      ->setLabel(t('Block type'))
+      ->setDescription(t('The block type.'))
+      ->setSetting('target_type', 'block_content_type');
+
     $fields['revision_log'] = BaseFieldDefinition::create('string_long')
       ->setLabel(t('Revision log message'))
       ->setDescription(t('The log entry explaining the changes in this revision.'))
@@ -188,17 +202,6 @@ class BlockContent extends ContentEntityBase implements BlockContentInterface {
       ->setLabel(t('Changed'))
       ->setDescription(t('The time that the custom block was last edited.'))
       ->setTranslatable(TRUE)
-      ->setRevisionable(TRUE);
-
-    $fields['revision_created'] = BaseFieldDefinition::create('created')
-      ->setLabel(t('Revision create time'))
-      ->setDescription(t('The time that the current revision was created.'))
-      ->setRevisionable(TRUE);
-
-    $fields['revision_user'] = BaseFieldDefinition::create('entity_reference')
-      ->setLabel(t('Revision user'))
-      ->setDescription(t('The user ID of the author of the current revision.'))
-      ->setSetting('target_type', 'user')
       ->setRevisionable(TRUE);
 
     $fields['revision_translation_affected'] = BaseFieldDefinition::create('boolean')
@@ -215,7 +218,7 @@ class BlockContent extends ContentEntityBase implements BlockContentInterface {
    * {@inheritdoc}
    */
   public function getRevisionLog() {
-    return $this->getRevisionLogMessage();
+    return $this->get('revision_log')->value;
   }
 
   /**
@@ -230,72 +233,8 @@ class BlockContent extends ContentEntityBase implements BlockContentInterface {
    * {@inheritdoc}
    */
   public function setRevisionLog($revision_log) {
-    return $this->setRevisionLogMessage($revision_log);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getRevisionCreationTime() {
-    return $this->get('revision_created')->value;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function setRevisionCreationTime($timestamp) {
-    $this->set('revision_created', $timestamp);
+    $this->set('revision_log', $revision_log);
     return $this;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getRevisionUser() {
-    return $this->get('revision_user')->entity;
-  }
-
-  public function setRevisionUser(UserInterface $account) {
-    $this->set('revision_user', $account);
-    return $this;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getRevisionUserId() {
-    return $this->get('revision_user')->entity->id();
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function setRevisionUserId($user_id) {
-    $this->set('revision_user', $user_id);
-    return $this;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getRevisionLogMessage() {
-    return $this->get('revision_log')->value;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function setRevisionLogMessage($revision_log_message) {
-    $this->set('revision_log', $revision_log_message);
-    return $this;
-  }
-
-  /**
-   * Invalidates the block plugin cache after changes and deletions.
-   */
-  protected static function invalidateBlockPluginCache() {
-    // Invalidate the block cache to update custom block-based derivatives.
-    \Drupal::service('plugin.manager.block')->clearCachedDefinitions();
   }
 
 }

@@ -441,40 +441,20 @@ class Sql extends PluginBase implements MigrateIdMapInterface, ContainerFactoryP
    * Creates schema from an ID definition.
    *
    * @param array $id_definition
-   *   The definition of the field having the structure as the items returned by
-   *   MigrateSourceInterface or MigrateDestinationInterface::getIds().
+   *   A field schema definition. Can be SQL schema or a type data
+   *   based schema. In the latter case, the value of type needs to be
+   *   $typed_data_type.$column.
    *
    * @return array
-   *   The database schema definition.
-   *
-   * @see \Drupal\migrate\Plugin\MigrateSourceInterface::getIds()
-   * @see \Drupal\migrate\Plugin\MigrateDestinationInterface::getIds()
+   *   The schema definition.
    */
   protected function getFieldSchema(array $id_definition) {
     $type_parts = explode('.', $id_definition['type']);
     if (count($type_parts) == 1) {
       $type_parts[] = 'value';
     }
-    unset($id_definition['type']);
-
-    // Get the field storage definition.
-    $definition = BaseFieldDefinition::create($type_parts[0]);
-
-    // Get a list of setting keys belonging strictly to the field definition.
-    $default_field_settings = $definition->getSettings();
-    // Separate field definition settings from custom settings. Custom settings
-    // are settings passed in $id_definition that are not part of field storage
-    // definition settings.
-    $field_settings = array_intersect_key($id_definition, $default_field_settings);
-    $custom_settings = array_diff_key($id_definition, $default_field_settings);
-
-    // Resolve schema from field storage definition settings.
-    $schema = $definition
-      ->setSettings($field_settings)
-      ->getColumns()[$type_parts[1]];
-
-    // Merge back custom settings.
-    return $schema + $custom_settings;
+    $schema = BaseFieldDefinition::create($type_parts[0])->getColumns();
+    return $schema[$type_parts[1]];
   }
 
   /**
@@ -865,25 +845,7 @@ class Sql extends PluginBase implements MigrateIdMapInterface, ContainerFactoryP
     if ($this->valid()) {
       $result = array();
       foreach ($this->destinationIdFields() as $destination_field_name => $idmap_field_name) {
-        if (!is_null($this->currentRow[$idmap_field_name])) {
-          $result[$destination_field_name] = $this->currentRow[$idmap_field_name];
-        }
-      }
-      return $result;
-    }
-    else {
-      return NULL;
-    }
-  }
-
-  /**
-   * @inheritdoc
-   */
-  public function currentSource() {
-    if ($this->valid()) {
-      $result = array();
-      foreach ($this->sourceIdFields() as $field_name => $source_id) {
-        $result[$field_name] = $this->currentKey[$source_id];
+        $result[$destination_field_name] = $this->currentRow[$idmap_field_name];
       }
       return $result;
     }

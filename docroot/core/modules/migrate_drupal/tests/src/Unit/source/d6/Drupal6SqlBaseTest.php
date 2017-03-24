@@ -170,7 +170,7 @@ class TestDrupal6SqlBase extends DrupalSqlBase {
   /**
    * Tweaks Drupal6SqlBase to set a new database connection for tests.
    *
-   * @param \Drupal\Core\Database\Connection $database
+   * @param \Drupal\Core\Database\Connection
    *   The new connection to use.
    *
    * @see \Drupal\Tests\migrate\Unit\MigrateSqlTestCase
@@ -182,7 +182,7 @@ class TestDrupal6SqlBase extends DrupalSqlBase {
   /**
    * Tweaks Drupal6SqlBase to set a new module handler for tests.
    *
-   * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
+   * @param \Drupal\Core\Extension\ModuleHandlerInterface
    *   The new module handler to use.
    *
    * @see \Drupal\Tests\migrate\Unit\MigrateSqlTestCase

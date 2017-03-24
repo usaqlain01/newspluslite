@@ -3,8 +3,8 @@
 namespace Drupal\image\Form;
 
 use Drupal\Core\Form\FormBase;
+use Drupal\Core\Form\FormState;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Form\SubformState;
 use Drupal\image\ConfigurableImageEffectInterface;
 use Drupal\image\ImageStyleInterface;
 use Drupal\Component\Plugin\Exception\PluginNotFoundException;
@@ -25,7 +25,7 @@ abstract class ImageEffectFormBase extends FormBase {
   /**
    * The image effect.
    *
-   * @var \Drupal\image\ImageEffectInterface|\Drupal\image\ConfigurableImageEffectInterface
+   * @var \Drupal\image\ImageEffectInterface
    */
   protected $imageEffect;
 
@@ -73,9 +73,7 @@ abstract class ImageEffectFormBase extends FormBase {
       '#value' => $this->imageEffect->getPluginId(),
     );
 
-    $form['data'] = [];
-    $subform_state = SubformState::createForSubform($form['data'], $form, $form_state);
-    $form['data'] = $this->imageEffect->buildConfigurationForm($form['data'], $subform_state);
+    $form['data'] = $this->imageEffect->buildConfigurationForm(array(), $form_state);
     $form['data']['#tree'] = TRUE;
 
     // Check the URL for a weight, then the image effect, otherwise use default.
@@ -104,7 +102,10 @@ abstract class ImageEffectFormBase extends FormBase {
   public function validateForm(array &$form, FormStateInterface $form_state) {
     // The image effect configuration is stored in the 'data' key in the form,
     // pass that through for validation.
-    $this->imageEffect->validateConfigurationForm($form['data'], SubformState::createForSubform($form['data'], $form, $form_state));
+    $effect_data = (new FormState())->setValues($form_state->getValue('data'));
+    $this->imageEffect->validateConfigurationForm($form, $effect_data);
+    // Update the original form values.
+    $form_state->setValue('data', $effect_data->getValues());
   }
 
   /**
@@ -115,7 +116,10 @@ abstract class ImageEffectFormBase extends FormBase {
 
     // The image effect configuration is stored in the 'data' key in the form,
     // pass that through for submission.
-    $this->imageEffect->submitConfigurationForm($form['data'], SubformState::createForSubform($form['data'], $form, $form_state));
+    $effect_data = (new FormState())->setValues($form_state->getValue('data'));
+    $this->imageEffect->submitConfigurationForm($form, $effect_data);
+    // Update the original form values.
+    $form_state->setValue('data', $effect_data->getValues());
 
     $this->imageEffect->setWeight($form_state->getValue('weight'));
     if (!$this->imageEffect->getUuid()) {

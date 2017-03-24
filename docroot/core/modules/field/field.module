@@ -1,5 +1,4 @@
 <?php
-
 /**
  * @file
  * Attach custom data fields to Drupal entities.

@@ -27,7 +27,7 @@ abstract class EntityWithUriCacheTagsTestBase extends EntityCacheTagsTestBase {
     $view_mode = $this->selectViewMode($entity_type);
 
     // The default cache contexts for rendered entities.
-    $entity_cache_contexts = $this->getDefaultCacheContexts();
+    $entity_cache_contexts = ['languages:' . LanguageInterface::TYPE_INTERFACE, 'theme', 'user.permissions'];
 
     // Generate the standardized entity cache tags.
     $cache_tag = $this->entity->getCacheTags();
@@ -80,9 +80,7 @@ abstract class EntityWithUriCacheTagsTestBase extends EntityCacheTagsTestBase {
       // Verify that after modifying the corresponding bundle entity, there is a
       // cache miss.
       $this->pass("Test modification of entity's bundle entity.", 'Debug');
-      $bundle_entity = $this->container->get('entity_type.manager')
-        ->getStorage($bundle_entity_type_id)
-        ->load($this->entity->bundle());
+      $bundle_entity = entity_load($bundle_entity_type_id, $this->entity->bundle());
       $bundle_entity->save();
       $this->verifyPageCache($entity_url, 'MISS');
 
@@ -141,16 +139,6 @@ abstract class EntityWithUriCacheTagsTestBase extends EntityCacheTagsTestBase {
     $this->entity->delete();
     $this->verifyPageCache($entity_url, 'MISS');
     $this->assertResponse(404);
-  }
-
-  /**
-   * Gets the default cache contexts for rendered entities.
-   *
-   * @return array
-   *   The default cache contexts for rendered entities.
-   */
-  protected function getDefaultCacheContexts() {
-    return ['languages:' . LanguageInterface::TYPE_INTERFACE, 'theme', 'user.permissions'];
   }
 
 }

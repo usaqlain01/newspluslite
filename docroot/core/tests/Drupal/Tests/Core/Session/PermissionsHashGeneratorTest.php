@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\Tests\Core\Session;
+namespace Drupal\Tests\Core\Session {
 
 use Drupal\Component\Utility\Crypt;
 use Drupal\Core\Session\PermissionsHashGenerator;
@@ -246,15 +246,19 @@ class PermissionsHashGeneratorTest extends UnitTestCase {
 
 }
 
-namespace Drupal\Core\Session;
+}
 
-// @todo remove once user_role_permissions() can be injected.
-if (!function_exists('user_role_permissions')) {
-  function user_role_permissions(array $roles) {
-    $role_permissions = array();
-    foreach ($roles as $rid) {
-      $role_permissions[$rid] = array();
+namespace {
+
+  // @todo remove once user_role_permissions() can be injected.
+  if (!function_exists('user_role_permissions')) {
+    function user_role_permissions(array $roles) {
+      $role_permissions = array();
+      foreach ($roles as $rid) {
+        $role_permissions[$rid] = array();
+      }
+      return $role_permissions;
     }
-    return $role_permissions;
   }
+
 }

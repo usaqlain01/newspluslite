@@ -24,7 +24,7 @@ class SearchPageAddForm extends SearchPageFormBase {
    */
   protected function actions(array $form, FormStateInterface $form_state) {
     $actions = parent::actions($form, $form_state);
-    $actions['submit']['#value'] = $this->t('Save');
+    $actions['submit']['#value'] = $this->t('Add search page');
     return $actions;
   }
 

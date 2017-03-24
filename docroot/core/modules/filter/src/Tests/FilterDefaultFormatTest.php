@@ -3,7 +3,6 @@
 namespace Drupal\filter\Tests;
 
 use Drupal\Component\Utility\Unicode;
-use Drupal\filter\Entity\FilterFormat;
 use Drupal\simpletest\WebTestBase;
 
 /**
@@ -36,7 +35,7 @@ class FilterDefaultFormatTest extends WebTestBase {
       );
       $this->drupalPostForm('admin/config/content/formats/add', $edit, t('Save configuration'));
       $this->resetFilterCaches();
-      $formats[] = FilterFormat::load($edit['format']);
+      $formats[] = entity_load('filter_format', $edit['format']);
     }
     list($first_format, $second_format) = $formats;
     $second_format_permission = $second_format->getPermissionName();
@@ -48,7 +47,7 @@ class FilterDefaultFormatTest extends WebTestBase {
     $edit = array();
     $edit['formats[' . $first_format->id() . '][weight]'] = -2;
     $edit['formats[' . $second_format->id() . '][weight]'] = -1;
-    $this->drupalPostForm('admin/config/content/formats', $edit, t('Save'));
+    $this->drupalPostForm('admin/config/content/formats', $edit, t('Save changes'));
     $this->resetFilterCaches();
 
     // Check that each user's default format is the lowest weighted format that
@@ -64,7 +63,7 @@ class FilterDefaultFormatTest extends WebTestBase {
     // default.
     $edit = array();
     $edit['formats[' . $second_format->id() . '][weight]'] = -3;
-    $this->drupalPostForm('admin/config/content/formats', $edit, t('Save'));
+    $this->drupalPostForm('admin/config/content/formats', $edit, t('Save changes'));
     $this->resetFilterCaches();
     $this->assertEqual(filter_default_format($first_user), filter_default_format($second_user), 'After the formats are reordered, both users have the same default format.');
   }

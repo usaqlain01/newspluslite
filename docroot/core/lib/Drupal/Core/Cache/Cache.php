@@ -148,7 +148,7 @@ class Cache {
   /**
    * Gets all cache bin services.
    *
-   * @return \Drupal\Core\Cache\CacheBackendInterface[]
+   * @return array
    *   An array of cache backend objects keyed by cache bins.
    */
   public static function getBins() {

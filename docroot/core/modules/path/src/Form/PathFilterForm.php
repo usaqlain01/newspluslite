@@ -38,6 +38,7 @@ class PathFilterForm extends FormBase {
     );
     $form['basic']['submit'] = array(
       '#type' => 'submit',
+      '#button_type' => 'primary',
       '#value' => $this->t('Filter'),
     );
     if ($keys) {

@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\Tests\Core\Plugin\Discovery;
+namespace Drupal\Tests\Core\Plugin\Discovery {
 
 use Drupal\Core\Plugin\Discovery\HookDiscovery;
 use Drupal\Tests\UnitTestCase;
@@ -61,11 +61,11 @@ class HookDiscoveryTest extends UnitTestCase {
     $this->moduleHandler->expects($this->at(1))
       ->method('invoke')
       ->with('hook_discovery_test', 'test_plugin')
-      ->will($this->returnValue($this->hookDiscoveryTestTestPlugin()));
+      ->will($this->returnValue(hook_discovery_test_test_plugin()));
     $this->moduleHandler->expects($this->at(2))
       ->method('invoke')
       ->with('hook_discovery_test2', 'test_plugin')
-      ->will($this->returnValue($this->hookDiscoveryTest2TestPlugin()));
+      ->will($this->returnValue(hook_discovery_test2_test_plugin()));
 
     $definitions = $this->hookDiscovery->getDefinitions();
 
@@ -94,8 +94,8 @@ class HookDiscoveryTest extends UnitTestCase {
     $this->moduleHandler->expects($this->any())
       ->method('invoke')
       ->will($this->returnValueMap(array(
-          array('hook_discovery_test', 'test_plugin', array(), $this->hookDiscoveryTestTestPlugin()),
-          array('hook_discovery_test2', 'test_plugin', array(), $this->hookDiscoveryTest2TestPlugin()),
+          array('hook_discovery_test', 'test_plugin', array(), hook_discovery_test_test_plugin()),
+          array('hook_discovery_test2', 'test_plugin', array(), hook_discovery_test2_test_plugin()),
         )
       ));
 
@@ -129,16 +129,20 @@ class HookDiscoveryTest extends UnitTestCase {
     $this->hookDiscovery->getDefinition('test_non_existant', TRUE);
   }
 
-  protected function hookDiscoveryTestTestPlugin() {
+}
+
+}
+
+namespace {
+  function hook_discovery_test_test_plugin() {
     return array(
       'test_id_1' => array('class' => 'Drupal\plugin_test\Plugin\plugin_test\fruit\Apple'),
       'test_id_2' => array('class' => 'Drupal\plugin_test\Plugin\plugin_test\fruit\Orange'),
     );
   }
-  protected function hookDiscoveryTest2TestPlugin() {
+  function hook_discovery_test2_test_plugin() {
     return array(
       'test_id_3' => array('class' => 'Drupal\plugin_test\Plugin\plugin_test\fruit\Cherry'),
     );
   }
-
 }

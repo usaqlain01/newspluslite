@@ -20,7 +20,7 @@ class JsCollectionRenderer implements AssetCollectionRendererInterface {
   /**
    * Constructs a JsCollectionRenderer.
    *
-   * @param \Drupal\Core\State\StateInterface $state
+   * @param \Drupal\Core\State\StateInterface
    *   The state key/value store.
    */
   public function __construct(StateInterface $state) {

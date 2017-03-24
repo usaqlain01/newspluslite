@@ -24,7 +24,6 @@ use Drupal\Component\Utility\Html as HtmlUtility;
  *   providing responsive tables.  Defaults to TRUE.
  * - #sticky: Indicates whether to add the drupal.tableheader library that makes
  *   table headers always visible at the top of the page. Defaults to FALSE.
- * - #size: The size of the input element in characters.
  *
  * Usage example:
  * @code
@@ -34,8 +33,7 @@ use Drupal\Component\Utility\Html as HtmlUtility;
  *   '#header' => array($this->t('Name'), $this->t('Phone')),
  * );
  *
- * for ($i = 1; $i <= 4; $i++) {
- *   $form['contacts'][$i]['#attributes'] = array('class' => array('foo', 'baz'));
+ * for ($i=1; $i<=4; $i++) {
  *   $form['contacts'][$i]['name'] = array(
  *     '#type' => 'textfield',
  *     '#title' => $this->t('Name'),
@@ -48,11 +46,6 @@ use Drupal\Component\Utility\Html as HtmlUtility;
  *     '#title_display' => 'invisible',
  *   );
  * }
- *
- * $form['contacts'][]['colspan_example'] = array(
- *   '#plain_text' => 'Colspan Example',
- *   '#wrapper_attributes' => array('colspan' => 2, 'class' => array('foo', 'bar')),
- * );
  * @endcode
  * @see \Drupal\Core\Render\Element\Tableselect
  *

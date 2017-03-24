@@ -59,16 +59,16 @@ class TextWithSummaryItemTest extends FieldKernelTestBase {
     $this->createField($entity_type);
 
     // Create an entity with a summary and no text format.
-    $storage = $this->container->get('entity_type.manager')
-      ->getStorage($entity_type);
-    $entity = $storage->create();
+    $entity = $this->container->get('entity_type.manager')
+      ->getStorage($entity_type)
+      ->create();
     $entity->summary_field->value = $value = $this->randomMachineName();
     $entity->summary_field->summary = $summary = $this->randomMachineName();
     $entity->summary_field->format = NULL;
     $entity->name->value = $this->randomMachineName();
     $entity->save();
 
-    $entity = $storage->load($entity->id());
+    $entity = entity_load($entity_type, $entity->id());
     $this->assertTrue($entity->summary_field instanceof FieldItemListInterface, 'Field implements interface.');
     $this->assertTrue($entity->summary_field[0] instanceof FieldItemInterface, 'Field item implements interface.');
     $this->assertEqual($entity->summary_field->value, $value);

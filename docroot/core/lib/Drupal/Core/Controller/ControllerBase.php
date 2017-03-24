@@ -3,7 +3,6 @@
 namespace Drupal\Core\Controller;
 
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
-use Drupal\Core\Logger\LoggerChannelTrait;
 use Drupal\Core\Routing\LinkGeneratorTrait;
 use Drupal\Core\Routing\RedirectDestinationTrait;
 use Drupal\Core\Routing\UrlGeneratorTrait;
@@ -34,7 +33,6 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 abstract class ControllerBase implements ContainerInjectionInterface {
 
   use LinkGeneratorTrait;
-  use LoggerChannelTrait;
   use RedirectDestinationTrait;
   use StringTranslationTrait;
   use UrlGeneratorTrait;
@@ -108,6 +106,13 @@ abstract class ControllerBase implements ContainerInjectionInterface {
    * @var \Drupal\Core\Form\FormBuilderInterface
    */
   protected $formBuilder;
+
+  /**
+   * The logger factory.
+   *
+   * @var \Psr\Log\LoggerInterface
+   */
+  protected $loggerFactory;
 
   /**
    * {@inheritdoc}
@@ -277,6 +282,23 @@ abstract class ControllerBase implements ContainerInjectionInterface {
       $this->languageManager = $this->container()->get('language_manager');
     }
     return $this->languageManager;
+  }
+
+  /**
+   * Returns a channel logger object.
+   *
+   * @param string $channel
+   *   The name of the channel. Can be any string, but the general practice is
+   *   to use the name of the subsystem calling this.
+   *
+   * @return \Psr\Log\LoggerInterface
+   *   The logger for this channel.
+   */
+  protected function getLogger($channel) {
+    if (!$this->loggerFactory) {
+      $this->loggerFactory = $this->container()->get('logger.factory');
+    }
+    return $this->loggerFactory->get($channel);
   }
 
   /**

@@ -3,8 +3,6 @@
 namespace Drupal\Tests\ban\Functional;
 
 use Drupal\Tests\BrowserTestBase;
-use Drupal\Core\Database\Database;
-use Drupal\ban\BanIpManager;
 
 /**
  * Tests IP address banning.
@@ -31,7 +29,7 @@ class IpAddressBlockingTest extends BrowserTestBase {
 
     // Ban a valid IP address.
     $edit = array();
-    $edit['ip'] = '1.2.3.3';
+    $edit['ip'] = '192.168.1.1';
     $this->drupalPostForm('admin/config/people/ban', $edit, t('Add'));
     $ip = db_query("SELECT iid from {ban_ip} WHERE ip = :ip", array(':ip' => $edit['ip']))->fetchField();
     $this->assertTrue($ip, 'IP address found in database.');
@@ -39,7 +37,7 @@ class IpAddressBlockingTest extends BrowserTestBase {
 
     // Try to block an IP address that's already blocked.
     $edit = array();
-    $edit['ip'] = '1.2.3.3';
+    $edit['ip'] = '192.168.1.1';
     $this->drupalPostForm('admin/config/people/ban', $edit, t('Add'));
     $this->assertText(t('This IP address is already banned.'));
 
@@ -75,28 +73,6 @@ class IpAddressBlockingTest extends BrowserTestBase {
     // $edit['ip'] = \Drupal::request()->getClientIP();
     // $this->drupalPostForm('admin/config/people/ban', $edit, t('Save'));
     // $this->assertText(t('You may not ban your own IP address.'));
-
-    // Test duplicate ip address are not present in the 'blocked_ips' table.
-    // when they are entered programmatically.
-    $connection = Database::getConnection();
-    $banIp = new BanIpManager($connection);
-    $ip = '1.0.0.0';
-    $banIp->banIp($ip);
-    $banIp->banIp($ip);
-    $banIp->banIp($ip);
-    $query = db_select('ban_ip', 'bip');
-    $query->fields('bip', array('iid'));
-    $query->condition('bip.ip', $ip);
-    $ip_count = $query->execute()->fetchAll();
-    $this->assertEqual(1, count($ip_count));
-    $ip = '';
-    $banIp->banIp($ip);
-    $banIp->banIp($ip);
-    $query = db_select('ban_ip', 'bip');
-    $query->fields('bip', array('iid'));
-    $query->condition('bip.ip', $ip);
-    $ip_count = $query->execute()->fetchAll();
-    $this->assertEqual(1, count($ip_count));
   }
 
 }

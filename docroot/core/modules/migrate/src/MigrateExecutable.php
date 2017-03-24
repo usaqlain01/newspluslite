@@ -2,7 +2,6 @@
 
 namespace Drupal\migrate;
 
-use Drupal\Component\Utility\Bytes;
 use Drupal\Core\Utility\Error;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\migrate\Event\MigrateEvents;
@@ -68,6 +67,13 @@ class MigrateExecutable implements MigrateExecutableInterface {
   protected $counts = array();
 
   /**
+   * The object currently being constructed.
+   *
+   * @var \stdClass
+   */
+  protected $destinationValues;
+
+  /**
    * The source.
    *
    * @var \Drupal\migrate\Plugin\MigrateSourceInterface
@@ -75,20 +81,18 @@ class MigrateExecutable implements MigrateExecutableInterface {
   protected $source;
 
   /**
+   * The current data row retrieved from the source.
+   *
+   * @var \stdClass
+   */
+  protected $sourceValues;
+
+  /**
    * The event dispatcher.
    *
    * @var \Symfony\Component\EventDispatcher\EventDispatcherInterface
    */
   protected $eventDispatcher;
-
-  /**
-   * Migration message service.
-   *
-   * @todo https://www.drupal.org/node/2822663 Make this protected.
-   *
-   * @var \Drupal\migrate\MigrateMessageInterface
-   */
-  public $message;
 
   /**
    * Constructs a MigrateExecutable and verifies and sets the memory limit.
@@ -113,7 +117,23 @@ class MigrateExecutable implements MigrateExecutableInterface {
       $this->memoryLimit = PHP_INT_MAX;
     }
     else {
-      $this->memoryLimit = Bytes::toInt($limit);
+      if (!is_numeric($limit)) {
+        $last = strtolower(substr($limit, -1));
+        switch ($last) {
+          case 'g':
+            $limit *= 1024;
+          case 'm':
+            $limit *= 1024;
+          case 'k':
+            $limit *= 1024;
+            break;
+          default:
+            $limit = PHP_INT_MAX;
+            $this->message->display($this->t('Invalid PHP memory_limit @limit, setting to unlimited.',
+              array('@limit' => $limit)));
+        }
+      }
+      $this->memoryLimit = $limit;
     }
   }
 
@@ -157,7 +177,7 @@ class MigrateExecutable implements MigrateExecutableInterface {
         )), 'error');
       return MigrationInterface::RESULT_FAILED;
     }
-    $this->getEventDispatcher()->dispatch(MigrateEvents::PRE_IMPORT, new MigrateImportEvent($this->migration, $this->message));
+    $this->getEventDispatcher()->dispatch(MigrateEvents::PRE_IMPORT, new MigrateImportEvent($this->migration));
 
     // Knock off migration if the requirements haven't been met.
     try {
@@ -165,17 +185,11 @@ class MigrateExecutable implements MigrateExecutableInterface {
     }
     catch (RequirementsException $e) {
       $this->message->display(
-        $this->t(
-          'Migration @id did not meet the requirements. @message @requirements',
-          array(
-            '@id' => $this->migration->id(),
-            '@message' => $e->getMessage(),
-            '@requirements' => $e->getRequirementsString(),
-          )
-        ),
-        'error'
-      );
-
+        $this->t('Migration @id did not meet the requirements. @message @requirements', array(
+          '@id' => $this->migration->id(),
+          '@message' => $e->getMessage(),
+          '@requirements' => $e->getRequirementsString(),
+        )), 'error');
       return MigrationInterface::RESULT_FAILED;
     }
 
@@ -209,20 +223,15 @@ class MigrateExecutable implements MigrateExecutableInterface {
         $save = FALSE;
       }
       catch (MigrateSkipRowException $e) {
-        if ($e->getSaveToMap()) {
-          $id_map->saveIdMapping($row, [], MigrateIdMapInterface::STATUS_IGNORED);
-        }
-        if ($message = trim($e->getMessage())) {
-          $this->saveMessage($message, MigrationInterface::MESSAGE_INFORMATIONAL);
-        }
+        $id_map->saveIdMapping($row, array(), MigrateIdMapInterface::STATUS_IGNORED);
         $save = FALSE;
       }
 
       if ($save) {
         try {
-          $this->getEventDispatcher()->dispatch(MigrateEvents::PRE_ROW_SAVE, new MigratePreRowSaveEvent($this->migration, $this->message, $row));
+          $this->getEventDispatcher()->dispatch(MigrateEvents::PRE_ROW_SAVE, new MigratePreRowSaveEvent($this->migration, $row));
           $destination_id_values = $destination->import($row, $id_map->lookupDestinationId($this->sourceIdValues));
-          $this->getEventDispatcher()->dispatch(MigrateEvents::POST_ROW_SAVE, new MigratePostRowSaveEvent($this->migration, $this->message, $row, $destination_id_values));
+          $this->getEventDispatcher()->dispatch(MigrateEvents::POST_ROW_SAVE, new MigratePostRowSaveEvent($this->migration, $row, $destination_id_values));
           if ($destination_id_values) {
             // We do not save an idMap entry for config.
             if ($destination_id_values !== TRUE) {
@@ -247,7 +256,12 @@ class MigrateExecutable implements MigrateExecutableInterface {
           $this->handleException($e);
         }
       }
+      if ($high_water_property = $this->migration->getHighWaterProperty()) {
+        $this->migration->saveHighWater($row->getSourceProperty($high_water_property['name']));
+      }
 
+      // Reset row properties.
+      unset($sourceValues, $destinationValues);
       $this->sourceRowStatus = MigrateIdMapInterface::STATUS_IMPORTED;
 
       // Check for memory exhaustion.
@@ -274,7 +288,7 @@ class MigrateExecutable implements MigrateExecutableInterface {
       }
     }
 
-    $this->getEventDispatcher()->dispatch(MigrateEvents::POST_IMPORT, new MigrateImportEvent($this->migration, $this->message));
+    $this->getEventDispatcher()->dispatch(MigrateEvents::POST_IMPORT, new MigrateImportEvent($this->migration));
     $this->migration->setStatus(MigrationInterface::STATUS_IDLE);
     return $return;
   }
@@ -315,12 +329,6 @@ class MigrateExecutable implements MigrateExecutableInterface {
         // We're now done with this row, so remove it from the map.
         $id_map->deleteDestination($destination_key);
       }
-      else {
-        // If there is no destination key the import probably failed and we can
-        // remove the row without further action.
-        $source_key = $id_map->currentSource();
-        $id_map->delete($source_key);
-      }
 
       // Check for memory exhaustion.
       if (($return = $this->checkStatus()) != MigrationInterface::RESULT_COMPLETED) {
@@ -333,6 +341,10 @@ class MigrateExecutable implements MigrateExecutableInterface {
         $this->migration->clearInterruptionResult();
         break;
       }
+    }
+    // If rollback completed successfully, reset the high water mark.
+    if ($return == MigrationInterface::RESULT_COMPLETED) {
+      $this->migration->saveHighWater(NULL);
     }
 
     // Notify modules that rollback attempt was complete.
@@ -383,7 +395,7 @@ class MigrateExecutable implements MigrateExecutableInterface {
             $value = NULL;
             break;
           }
-          $multiple = $plugin->multiple();
+          $multiple = $multiple || $plugin->multiple();
         }
       }
       // No plugins or no value means do not set.
@@ -458,44 +470,30 @@ class MigrateExecutable implements MigrateExecutableInterface {
     }
     if ($pct_memory > $threshold) {
       $this->message->display(
-        $this->t(
-          'Memory usage is @usage (@pct% of limit @limit), reclaiming memory.',
-          array(
-            '@pct' => round($pct_memory * 100),
-            '@usage' => $this->formatSize($usage),
-            '@limit' => $this->formatSize($this->memoryLimit),
-          )
-        ),
-        'warning'
-      );
+        $this->t('Memory usage is @usage (@pct% of limit @limit), reclaiming memory.',
+          array('@pct' => round($pct_memory * 100),
+                '@usage' => $this->formatSize($usage),
+                '@limit' => $this->formatSize($this->memoryLimit))),
+        'warning');
       $usage = $this->attemptMemoryReclaim();
       $pct_memory = $usage / $this->memoryLimit;
       // Use a lower threshold - we don't want to be in a situation where we keep
       // coming back here and trimming a tiny amount
       if ($pct_memory > (0.90 * $threshold)) {
         $this->message->display(
-          $this->t(
-            'Memory usage is now @usage (@pct% of limit @limit), not enough reclaimed, starting new batch',
-            array(
-              '@pct' => round($pct_memory * 100),
-              '@usage' => $this->formatSize($usage),
-              '@limit' => $this->formatSize($this->memoryLimit),
-            )
-          ),
-          'warning'
-        );
+          $this->t('Memory usage is now @usage (@pct% of limit @limit), not enough reclaimed, starting new batch',
+            array('@pct' => round($pct_memory * 100),
+                  '@usage' => $this->formatSize($usage),
+                  '@limit' => $this->formatSize($this->memoryLimit))),
+          'warning');
         return TRUE;
       }
       else {
         $this->message->display(
-          $this->t(
-            'Memory usage is now @usage (@pct% of limit @limit), reclaimed enough, continuing',
-            array(
-              '@pct' => round($pct_memory * 100),
-              '@usage' => $this->formatSize($usage),
-              '@limit' => $this->formatSize($this->memoryLimit),
-            )
-          ),
+          $this->t('Memory usage is now @usage (@pct% of limit @limit), reclaimed enough, continuing',
+            array('@pct' => round($pct_memory * 100),
+                  '@usage' => $this->formatSize($usage),
+                  '@limit' => $this->formatSize($this->memoryLimit))),
           'warning');
         return FALSE;
       }

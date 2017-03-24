@@ -129,7 +129,6 @@ class RearrangeFilter extends ViewsFormBase {
             'class' => array('views-remove-group'),
           ),
           '#group' => $id,
-          '#ajax' => ['url' => NULL],
         );
       }
       $group_options[$id] = $id == 1 ? $this->t('Default group') : $this->t('Group @group', array('@group' => $id));
@@ -332,7 +331,7 @@ class RearrangeFilter extends ViewsFormBase {
    *
    * For example array(0 => 'foo') would be array(1 => 'foo').
    *
-   * @param array $array
+   * @param array
    *   The array to increment keys on.
    *
    * @return array

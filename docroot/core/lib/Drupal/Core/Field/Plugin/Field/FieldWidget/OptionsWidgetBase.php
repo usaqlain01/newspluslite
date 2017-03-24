@@ -190,7 +190,7 @@ abstract class OptionsWidgetBase extends WidgetBase {
   /**
    * Returns the empty option label to add to the list of options, if any.
    *
-   * @return string|null
+   * @return string|NULL
    *   Either a label of the empty option, or NULL.
    */
   protected function getEmptyLabel() { }

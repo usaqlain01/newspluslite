@@ -205,12 +205,10 @@ abstract class EntityDisplayFormBase extends EntityForm {
         }
         $form['modes']['display_modes_custom'] = array(
           '#type' => 'checkboxes',
-          '#title' => $this->t('Use custom display settings for the following @display_context modes', ['@display_context' => $this->displayContext]),
+          '#title' => $this->t('Use custom display settings for the following modes'),
           '#options' => $display_mode_options,
           '#default_value' => $default,
         );
-        // Provide link to manage display modes.
-        $form['modes']['display_modes_link'] = $this->getDisplayModesLink();
       }
     }
 
@@ -793,14 +791,6 @@ abstract class EntityDisplayFormBase extends EntityForm {
   abstract protected function getDisplayModeOptions();
 
   /**
-   * Returns a link to the form or view mode admin page.
-   *
-   * @return array
-   *   An array of a form element to be rendered as a link.
-   */
-  abstract protected function getDisplayModesLink();
-
-  /**
    * Returns the region to which a row in the display overview belongs.
    *
    * @param array $row
@@ -876,12 +866,8 @@ abstract class EntityDisplayFormBase extends EntityForm {
   protected function saveDisplayStatuses($display_statuses) {
     $displays = $this->getDisplays();
     foreach ($displays as $display) {
-      // Only update the display if the status is changing.
-      $new_status = $display_statuses[$display->get('mode')];
-      if ($new_status !== $display->status()) {
-        $display->set('status', $new_status);
-        $display->save();
-      }
+      $display->set('status', $display_statuses[$display->get('mode')]);
+      $display->save();
     }
   }
 

@@ -9,7 +9,7 @@ use Drupal\node\NodeInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
- * Argument handler for dates.
+ * Abstract argument handler for dates.
  *
  * Adds an option to set a default argument based on the current date.
  *

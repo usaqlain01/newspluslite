@@ -44,8 +44,7 @@ class BanIpManager implements BanIpManagerInterface {
    * {@inheritdoc}
    */
   public function banIp($ip) {
-    $this->connection->merge('ban_ip')
-      ->key(array('ip' => $ip))
+    $this->connection->insert('ban_ip')
       ->fields(array('ip' => $ip))
       ->execute();
   }

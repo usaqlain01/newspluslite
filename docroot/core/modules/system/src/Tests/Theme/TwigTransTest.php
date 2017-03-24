@@ -92,30 +92,6 @@ class TwigTransTest extends WebTestBase {
   }
 
   /**
-   * Test empty Twig "trans" tags.
-   */
-  public function testEmptyTwigTransTags() {
-    $elements = [
-      '#type' => 'inline_template',
-      '#template' => '{% trans %}{% endtrans %}',
-    ];
-    /** @var \Drupal\Core\Render\RendererInterface $renderer */
-    $renderer = \Drupal::service('renderer');
-
-    try {
-      $renderer->renderPlain($elements);
-
-      $this->fail('{% trans %}{% endtrans %} did not throw an exception.');
-    }
-    catch (\Twig_Error_Syntax $e) {
-      $this->assertTrue(strstr($e->getMessage(), '{% trans %} tag cannot be empty'), '{% trans %}{% endtrans %} threw the expected exception.');
-    }
-    catch (\Exception $e) {
-      $this->fail('{% trans %}{% endtrans %} threw an unexpected exception.');
-    }
-  }
-
-  /**
    * Asserts Twig trans tags.
    */
   protected function assertTwigTransTags() {
@@ -209,7 +185,7 @@ class TwigTransTest extends WebTestBase {
         $this->assertRaw('"edit-languages-' . $langcode . '-weight"', 'Language code found.');
 
         // Import the custom .po contents for the language.
-        $filename = \Drupal::service('file_system')->tempnam('temporary://', "po_") . '.po';
+        $filename = tempnam('temporary://', "po_") . '.po';
         file_put_contents($filename, $contents);
         $options = array(
           'files[file]' => $filename,
@@ -229,7 +205,7 @@ class TwigTransTest extends WebTestBase {
    * @param string $langcode
    *   The langcode of the specified language.
    *
-   * @return string|false
+   * @return string|FALSE
    *   The .po contents for the specified language or FALSE if none exists.
    */
   protected function poFileContents($langcode) {

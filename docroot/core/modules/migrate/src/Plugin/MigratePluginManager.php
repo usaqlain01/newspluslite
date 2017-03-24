@@ -21,7 +21,7 @@ use Drupal\Core\Plugin\DefaultPluginManager;
  *
  * @ingroup migration
  */
-class MigratePluginManager extends DefaultPluginManager implements MigratePluginManagerInterface {
+class MigratePluginManager extends DefaultPluginManager {
 
   /**
    * Constructs a MigratePluginManager object.
@@ -41,13 +41,16 @@ class MigratePluginManager extends DefaultPluginManager implements MigratePlugin
    *   'Drupal\Component\Annotation\PluginID'.
    */
   public function __construct($type, \Traversable $namespaces, CacheBackendInterface $cache_backend, ModuleHandlerInterface $module_handler, $annotation = 'Drupal\Component\Annotation\PluginID') {
-    parent::__construct("Plugin/migrate/$type", $namespaces, $module_handler, NULL, $annotation);
+    $plugin_interface = isset($plugin_interface_map[$type]) ? $plugin_interface_map[$type] : NULL;
+    parent::__construct("Plugin/migrate/$type", $namespaces, $module_handler, $plugin_interface, $annotation);
     $this->alterInfo('migrate_' . $type . '_info');
     $this->setCacheBackend($cache_backend, 'migrate_plugins_' . $type);
   }
 
   /**
    * {@inheritdoc}
+   *
+   * A specific createInstance method is necessary to pass the migration on.
    */
   public function createInstance($plugin_id, array $configuration = array(), MigrationInterface $migration = NULL) {
     $plugin_definition = $this->getDefinition($plugin_id);

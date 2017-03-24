@@ -233,7 +233,7 @@ interface DisplayPluginInterface {
    * block display links to a page display, the page display will be returned
    * in both cases.
    *
-   * @return \Drupal\views\Plugin\views\display\DisplayRouterInterface|null
+   * @return \Drupal\views\Plugin\views\display\DisplayRouterInterface|NULL
    */
   public function getRoutedDisplay();
 

@@ -55,7 +55,7 @@ class ExposedFilterAJAXTest extends JavascriptTestBase {
 
     // Search for "Page One".
     $this->submitForm(['title' => 'Page One'], t('Filter'));
-    $this->assertSession()->assertWaitOnAjaxRequest();
+    $this->waitForAjaxToFinish();
 
     // Verify that only the "Page One" Node is present.
     $html = $session->getPage()->getHtml();
@@ -64,20 +64,20 @@ class ExposedFilterAJAXTest extends JavascriptTestBase {
 
     // Search for "Page Two".
     $this->submitForm(['title' => 'Page Two'], t('Filter'));
-    $this->assertSession()->assertWaitOnAjaxRequest();
+    $this->waitForAjaxToFinish();
 
     // Verify that only the "Page Two" Node is present.
     $html = $session->getPage()->getHtml();
     $this->assertContains('Page Two', $html);
     $this->assertNotContains('Page One', $html);
+  }
 
-    // Reset the form.
-    $this->submitForm([], t('Reset'));
-    $this->assertSession()->assertWaitOnAjaxRequest();
-
-    $this->assertSession()->pageTextContains('Page One');
-    $this->assertSession()->pageTextContains('Page Two');
-    $this->assertFalse($session->getPage()->hasButton('Reset'));
+  /**
+   * Waits for jQuery to become active and animations to complete.
+   */
+  protected function waitForAjaxToFinish() {
+    $condition = "(0 === jQuery.active && 0 === jQuery(':animated').length)";
+    $this->assertJsCondition($condition, 10000);
   }
 
 }

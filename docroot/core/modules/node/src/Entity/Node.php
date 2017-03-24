@@ -102,8 +102,8 @@ class Node extends ContentEntityBase implements NodeInterface {
 
     // If no revision author has been set explicitly, make the node owner the
     // revision author.
-    if (!$this->getRevisionUser()) {
-      $this->setRevisionUserId($this->getOwnerId());
+    if (!$this->getRevisionAuthor()) {
+      $this->setRevisionAuthorId($this->getOwnerId());
     }
   }
 
@@ -178,8 +178,13 @@ class Node extends ContentEntityBase implements NodeInterface {
    * {@inheritdoc}
    */
   public function access($operation = 'view', AccountInterface $account = NULL, $return_as_object = FALSE) {
-    // This override exists to set the operation to the default value "view".
-    return parent::access($operation, $account, $return_as_object);
+    if ($operation == 'create') {
+      return parent::access($operation, $account, $return_as_object);
+    }
+
+    return \Drupal::entityManager()
+      ->getAccessControlHandler($this->entityTypeId)
+      ->access($this, $operation, $account, $return_as_object);
   }
 
   /**
@@ -306,13 +311,6 @@ class Node extends ContentEntityBase implements NodeInterface {
    * {@inheritdoc}
    */
   public function getRevisionAuthor() {
-    return $this->getRevisionUser();
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getRevisionUser() {
     return $this->get('revision_uid')->entity;
   }
 
@@ -320,45 +318,7 @@ class Node extends ContentEntityBase implements NodeInterface {
    * {@inheritdoc}
    */
   public function setRevisionAuthorId($uid) {
-    $this->setRevisionUserId($uid);
-    return $this;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function setRevisionUser(UserInterface $user) {
-    $this->set('revision_uid', $user);
-    return $this;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getRevisionUserId() {
-    return $this->get('revision_uid')->entity->id();
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function setRevisionUserId($user_id) {
-    $this->set('revision_uid', $user_id);
-    return $this;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getRevisionLogMessage() {
-    return $this->get('revision_log')->value;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function setRevisionLogMessage($revision_log_message) {
-    $this->set('revision_log', $revision_log_message);
+    $this->set('revision_uid', $uid);
     return $this;
   }
 

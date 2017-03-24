@@ -2,7 +2,6 @@
 
 namespace Drupal\system\Tests\Module;
 
-use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Logger\RfcLogLevel;
 
 /**
@@ -204,10 +203,7 @@ class InstallUninstallTest extends ModuleTestBase {
       $this->assertText('Are you sure you wish to enable experimental modules?');
       $this->drupalPostForm(NULL, array(), t('Continue'));
     }
-    // The string tested here is translatable but we are only using a part of it
-    // so using a translated string is wrong. Doing so would create a new string
-    // to translate.
-    $this->assertText(new FormattableMarkup('@count modules have been enabled: ', array('@count' => count($all_modules))), 'Modules status has been updated.');
+    $this->assertText(t('@count modules have been enabled: ', array('@count' => count($all_modules))), 'Modules status has been updated.');
   }
 
   /**

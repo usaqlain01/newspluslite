@@ -2,7 +2,7 @@
 
 namespace Drupal\user;
 
-use Drupal\Core\Discovery\YamlDiscovery;
+use Drupal\Component\Discovery\YamlDiscovery;
 use Drupal\Core\Controller\ControllerResolverInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
@@ -59,7 +59,7 @@ class PermissionHandler implements PermissionHandlerInterface {
   /**
    * The YAML discovery class to find all .permissions.yml files.
    *
-   * @var \Drupal\Core\Discovery\YamlDiscovery
+   * @var \Drupal\Component\Discovery\YamlDiscovery
    */
   protected $yamlDiscovery;
 
@@ -91,7 +91,7 @@ class PermissionHandler implements PermissionHandlerInterface {
   /**
    * Gets the YAML discovery.
    *
-   * @return \Drupal\Core\Discovery\YamlDiscovery
+   * @return \Drupal\Component\Discovery\YamlDiscovery
    *   The YAML discovery.
    */
   protected function getYamlDiscovery() {

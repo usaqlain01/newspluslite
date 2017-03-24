@@ -58,7 +58,7 @@ interface DrupalKernelInterface extends HttpKernelInterface, ContainerAwareInter
    *
    * This also allows inspecting a built container for debugging purposes.
    *
-   * @return array|null
+   * @return array|NULL
    *   The cached container definition or NULL if not found in cache.
    */
   public function getCachedContainerDefinition();

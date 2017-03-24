@@ -24,7 +24,7 @@ class ThemeNegotiator implements ThemeNegotiatorInterface {
    *
    * Set to NULL if the array needs to be re-calculated.
    *
-   * @var array|null
+   * @var array|NULL
    */
   protected $sortedNegotiators;
 

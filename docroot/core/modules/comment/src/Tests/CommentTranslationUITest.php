@@ -146,10 +146,7 @@ class CommentTranslationUITest extends ContentTranslationUITestBase {
    * {@inheritdoc}
    */
   protected function doTestAuthoringInfo() {
-    $storage = $this->container->get('entity_type.manager')
-      ->getStorage($this->entityTypeId);
-    $storage->resetCache([$this->entityId]);
-    $entity = $storage->load($this->entityId);
+    $entity = entity_load($this->entityTypeId, $this->entityId, TRUE);
     $languages = $this->container->get('language_manager')->getLanguages();
     $values = array();
 
@@ -169,8 +166,7 @@ class CommentTranslationUITest extends ContentTranslationUITestBase {
       $this->drupalPostForm($url, $edit, $this->getFormSubmitAction($entity, $langcode));
     }
 
-    $storage->resetCache([$this->entityId]);
-    $entity = $storage->load($this->entityId);
+    $entity = entity_load($this->entityTypeId, $this->entityId, TRUE);
     foreach ($this->langcodes as $langcode) {
       $metadata = $this->manager->getTranslationMetadata($entity->getTranslation($langcode));
       $this->assertEqual($metadata->getAuthor()->id(), $values[$langcode]['uid'], 'Translation author correctly stored.');
@@ -199,10 +195,7 @@ class CommentTranslationUITest extends ContentTranslationUITestBase {
    * {@inheritdoc}
    */
   protected function doTestTranslationEdit() {
-    $storage = $this->container->get('entity_type.manager')
-      ->getStorage($this->entityTypeId);
-    $storage->resetCache([$this->entityId]);
-    $entity = $storage->load($this->entityId);
+    $entity = entity_load($this->entityTypeId, $this->entityId, TRUE);
     $languages = $this->container->get('language_manager')->getLanguages();
 
     foreach ($this->langcodes as $langcode) {

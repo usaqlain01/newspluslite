@@ -51,16 +51,11 @@ abstract class AccessResult implements AccessResultInterface, RefinableCacheable
   /**
    * Creates an AccessResultInterface object with isForbidden() === TRUE.
    *
-   * @param string|null $reason
-   *   (optional) The reason why access is forbidden. Intended for developers,
-   *   hence not translatable.
-   *
    * @return \Drupal\Core\Access\AccessResult
    *   isForbidden() will be TRUE.
    */
-  public static function forbidden($reason = NULL) {
-    assert('is_string($reason) || is_null($reason)');
-    return new AccessResultForbidden($reason);
+  public static function forbidden() {
+    return new AccessResultForbidden();
   }
 
   /**
@@ -339,15 +334,7 @@ abstract class AccessResult implements AccessResultInterface, RefinableCacheable
     if ($this->isForbidden() || $other->isForbidden()) {
       $result = static::forbidden();
       if (!$this->isForbidden()) {
-        if ($other instanceof AccessResultReasonInterface) {
-          $result->setReason($other->getReason());
-        }
         $merge_other = TRUE;
-      }
-      else {
-        if ($this instanceof AccessResultReasonInterface) {
-          $result->setReason($this->getReason());
-        }
       }
     }
     elseif ($this->isAllowed() && $other->isAllowed()) {

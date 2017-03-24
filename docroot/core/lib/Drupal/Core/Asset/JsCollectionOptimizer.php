@@ -41,13 +41,13 @@ class JsCollectionOptimizer implements AssetCollectionOptimizerInterface {
   /**
    * Constructs a JsCollectionOptimizer.
    *
-   * @param \Drupal\Core\Asset\AssetCollectionGrouperInterface $grouper
+   * @param \Drupal\Core\Asset\AssetCollectionGrouperInterface
    *   The grouper for JS assets.
-   * @param \Drupal\Core\Asset\AssetOptimizerInterface $optimizer
+   * @param \Drupal\Core\Asset\AssetOptimizerInterface
    *   The optimizer for a single JS asset.
-   * @param \Drupal\Core\Asset\AssetDumperInterface $dumper
+   * @param \Drupal\Core\Asset\AssetDumperInterface
    *   The dumper for optimized JS assets.
-   * @param \Drupal\Core\State\StateInterface $state
+   * @param \Drupal\Core\State\StateInterface
    *   The state key/value store.
    */
   public function __construct(AssetCollectionGrouperInterface $grouper, AssetOptimizerInterface $optimizer, AssetDumperInterface $dumper, StateInterface $state) {

@@ -5,7 +5,6 @@ namespace Drupal\Core\Form;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 use Drupal\Core\DependencyInjection\DependencySerializationTrait;
-use Drupal\Core\Logger\LoggerChannelTrait;
 use Drupal\Core\Routing\LinkGeneratorTrait;
 use Drupal\Core\Routing\RedirectDestinationTrait;
 use Drupal\Core\Routing\UrlGeneratorTrait;
@@ -44,7 +43,6 @@ abstract class FormBase implements FormInterface, ContainerInjectionInterface {
 
   use DependencySerializationTrait;
   use LinkGeneratorTrait;
-  use LoggerChannelTrait;
   use RedirectDestinationTrait;
   use StringTranslationTrait;
   use UrlGeneratorTrait;
@@ -67,6 +65,13 @@ abstract class FormBase implements FormInterface, ContainerInjectionInterface {
    * @var \Drupal\Core\Config\ConfigFactoryInterface
    */
   protected $configFactory;
+
+  /**
+   * The logger factory.
+   *
+   * @var \Drupal\Core\Logger\LoggerChannelFactoryInterface
+   */
+  protected $loggerFactory;
 
   /**
    * The route match.
@@ -210,18 +215,17 @@ abstract class FormBase implements FormInterface, ContainerInjectionInterface {
   /**
    * Gets the logger for a specific channel.
    *
-   * This method exists for backward-compatibility between FormBase and
-   * LoggerChannelTrait. Use LoggerChannelTrait::getLogger() instead.
-   *
    * @param string $channel
-   *   The name of the channel. Can be any string, but the general practice is
-   *   to use the name of the subsystem calling this.
+   *   The name of the channel.
    *
    * @return \Psr\Log\LoggerInterface
-   *   The logger for the given channel.
+   *   The logger for this channel.
    */
   protected function logger($channel) {
-    return $this->getLogger($channel);
+    if (!$this->loggerFactory) {
+      $this->loggerFactory = $this->container()->get('logger.factory');
+    }
+    return $this->loggerFactory->get($channel);
   }
 
 }

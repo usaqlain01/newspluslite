@@ -20,11 +20,10 @@ class FormTestGroupFieldsetForm extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state, $required = FALSE) {
+  public function buildForm(array $form, FormStateInterface $form_state) {
     $form['fieldset'] = array(
       '#type' => 'fieldset',
       '#title' => 'Fieldset',
-      '#required' => !empty($required),
     );
     $form['meta'] = array(
       '#type' => 'container',

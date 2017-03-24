@@ -77,7 +77,7 @@ class ImageItemTest extends FieldKernelTestBase {
     $entity->name->value = $this->randomMachineName();
     $entity->save();
 
-    $entity = EntityTest::load($entity->id());
+    $entity = entity_load('entity_test', $entity->id());
     $this->assertTrue($entity->image_test instanceof FieldItemListInterface, 'Field implements interface.');
     $this->assertTrue($entity->image_test[0] instanceof FieldItemInterface, 'Field item implements interface.');
     $this->assertEqual($entity->image_test->target_id, $this->image->id());

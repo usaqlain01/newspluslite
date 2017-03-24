@@ -16,7 +16,7 @@ class MigrateSystemSiteTest extends MigrateDrupal6TestBase {
    */
   protected function setUp() {
     parent::setUp();
-    $this->executeMigration('system_site');
+    $this->executeMigration('d6_system_site');
   }
 
   /**

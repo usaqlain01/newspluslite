@@ -3,7 +3,6 @@
 namespace Drupal\Tests\action\Functional;
 
 use Drupal\Component\Utility\Crypt;
-use Drupal\system\Entity\Action;
 use Drupal\Tests\BrowserTestBase;
 
 /**
@@ -82,7 +81,7 @@ class ConfigurationTest extends BrowserTestBase {
     $this->assertResponse(200);
     $this->assertNoText($new_action_label, "Make sure the action label does not appear on the overview page after we've deleted the action.");
 
-    $action = Action::load($aid);
+    $action = entity_load('action', $aid);
     $this->assertFalse($action, 'Make sure the action is gone after being deleted.');
   }
 
